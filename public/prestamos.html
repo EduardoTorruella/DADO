@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préstamos - Caja Comunitaria</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1050px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn-back {
+            background: var(--surface);
+            border: 3px solid var(--border);
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-back:hover { background: #f1f5f9; }
+
+        /* Form elements copied from index */
+        .form-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .option-btn {
+            background: var(--surface);
+            border: 3px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .option-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .option-btn.selected {
+            background: #eff6ff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+        .option-btn .emoji { font-size: 4rem; }
+        .option-btn .lbl { font-size: 1.5rem; font-weight: bold; color: var(--text); }
+
+        .money-pad-box {
+            background: #f1f5f9;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            margin-bottom: 2rem;
+            border: 3px solid var(--border);
+        }
+
+        .money-display {
+            font-size: 5rem;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 3px dashed var(--primary);
+        }
+
+        .monto-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-clear {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        .btn-clear:hover { opacity: 0.9; }
+
+        .money-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .money-btn {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            padding: 1rem;
+            border-radius: 1rem;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .money-btn:hover { border-color: var(--success); transform: translateY(-2px); }
+        .money-btn.coin { background: #f8fafc; }
+
+        .bill-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            object-fit: contain;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 1rem;
+            border: 2px solid var(--border);
+        }
+
+        .input-emoji {
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .action-btn {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+
+        /* Tables and status */
+        .control-panel {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border: 3px solid var(--primary);
+        }
+        .control-panel label { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .tasa-input { font-size: 2rem; padding: 0.5rem; border: 2px solid var(--border); border-radius: 0.5rem; width: 150px; text-align: center; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 1.5rem; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        th, td { padding: 1.5rem; text-align: left; font-size: 1.5rem; border-bottom: 2px solid var(--border); }
+        th { background: var(--primary); color: white; font-weight: bold; }
+        tr:last-child td { border-bottom: none; }
+        .amount { font-weight: bold; color: var(--text); }
+        .debt { font-weight: bold; color: var(--danger); font-size: 1.8rem; }
+
+        /* MODALS */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 90%; max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close-modal {
+            background: var(--danger); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 1.2rem; float: right; margin-bottom: 1rem;
+        }
+        .calc-input { width: 100%; padding: 0.8rem; font-size: 1.2rem; border: 2px solid var(--border); border-radius: 0.5rem; box-sizing: border-box; }
+        
+        #status-msg {
+            text-align: center; font-size: 2rem; font-weight: bold; margin-bottom: 1rem; padding: 1rem; border-radius: 1rem; display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <a href="index.html" class="btn-back">⬅️ Volver al Inicio</a>
+        <button class="action-btn" style="width: auto; padding: 1rem 2rem; font-size: 1.5rem; background: var(--primary);" onclick="escuchar()">🎤 Dictar por Voz</button>
+    </div>
+    
+    <h1>🤝 Administración de Préstamos</h1>
+
+    <div id="status-msg"></div>
+
+    <div class="form-section">
+        <!-- BOTONES TRANSACCION -->
+        <div class="grid-options" id="tipo-options">
+            <button class="option-btn" data-val="Préstamo" onclick="seleccionar(this, 'Pedir Préstamo')">
+                <span class="emoji">📤</span>
+                <span class="lbl">Dar Préstamo</span>
+            </button>
+            <button class="option-btn" data-val="Pago_Capital" onclick="seleccionar(this, 'Abono a un préstamo')">
+                <span class="emoji">↩️</span>
+                <span class="lbl">Abono / Pago</span>
+            </button>
+            <button class="option-btn" data-val="Multa" onclick="seleccionar(this, 'Cobro de multa')">
+                <span class="emoji">⚠️</span>
+                <span class="lbl">Multa</span>
+            </button>
+        </div>
+
+        <!-- PAD DE DINERO -->
+        <div class="money-pad-box">
+            <div class="money-display" id="display-monto" onclick="hablar('Monto actual ' + this.innerText)">$0.00</div>
+            
+            <div class="monto-controls">
+                <button class="btn-clear" onclick="limpiarMonto()">🗑️ Borrar Monto</button>
+            </div>
+
+            <div class="money-grid">
+                <button class="money-btn" onclick="agregarMonto(100)">
+                    <img src="dolar100.jpeg" alt="Billete de 100 dólares" class="bill-img">
+                    <span class="lbl">$100</span>
+                </button>
+                <button class="money-btn" onclick="agregarMonto(50)">
+                    <img src="dolar50.jpeg" alt="Billete de 50 dólares" class="bill-img">
+                    <span class="lbl">$50</span>
+                </button>
+                <button class="money-btn" onclick="agregarMonto(20)">
+                    <img src="dolar220.jpeg" alt="Billete de 20 dólares" class="bill-img">
+                    <span class="lbl">$20</span>
+                </button>
+                <button class="money-btn" onclick="agregarMonto(10)">
+                    <img src="dolar10.jpeg" alt="Billete de 10 dólares" class="bill-img">
+                    <span class="lbl">$10</span>
+                </button>
+                <button class="money-btn" onclick="agregarMonto(5)">
+                    <img src="dolar5.jpeg" alt="Billete de 5 dólares" class="bill-img">
+                    <span class="lbl">$5</span>
+                </button>
+                <button class="money-btn" onclick="agregarMonto(1)">
+                    <img src="dolar1.jpeg" alt="Billete de 1 dólar" class="bill-img">
+                    <span class="lbl">$1</span>
+                </button>
+
+                <button class="money-btn coin" onclick="agregarMonto(0.25)">
+                    <img src="cora.jpeg" alt="Moneda de 25 centavos" class="bill-img" style="border-radius: 50%; width: 80px; max-width: 80px;">
+                    <span class="lbl">25¢</span>
+                </button>
+                <button class="money-btn coin" onclick="agregarMonto(0.10)">
+                    <img src="10centavos.jpeg" alt="Moneda de 10 centavos" class="bill-img" style="border-radius: 50%; width: 70px; max-width: 70px;">
+                    <span class="lbl">10¢</span>
+                </button>
+                <button class="money-btn coin" onclick="agregarMonto(0.05)">
+                    <img src="5centavos.jpeg" alt="Moneda de 5 centavos" class="bill-img" style="border-radius: 50%; width: 85px; max-width: 85px;">
+                    <span class="lbl">5¢</span>
+                </button>
+                <button class="money-btn coin" onclick="agregarMonto(0.01)">
+                    <img src="1centavo.jpeg" alt="Moneda de 1 centavo" class="bill-img" style="border-radius: 50%; width: 75px; max-width: 75px;">
+                    <span class="lbl">1¢</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SELECTOR DE USUARIO -->
+        <div class="input-group" style="cursor: pointer;" onclick="abrirModalUsuarios(); hablar('Seleccionar Usuario o Nombre');">
+            <div class="input-emoji">
+                <span>👤</span>
+                <span class="lbl">Usuario / ID</span>
+            </div>
+            <div id="usuario-display" style="font-size: 2rem; font-weight: bold; color: #1e293b; width: 100%; text-align: left;">--- (Tocar para elegir)</div>
+            <input type="hidden" id="usuario" value="">
+        </div>
+
+        <button class="action-btn" onclick="guardar()">
+            <span class="emoji">💾</span>
+            <span class="lbl">Guardar Transacción</span>
+        </button>
+    </div>
+
+    <!-- TABLA DE PRÉSTAMOS -->
+    <div class="control-panel">
+        <label>Interés Global para Préstamos (%):</label>
+        <input type="number" id="tasa-global" class="tasa-input" value="10" min="0" oninput="calcularTabla()">
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre (Usuario)</th>
+                <th>Cantidad Prestada</th>
+                <th>Deuda Total a Pagar</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-body">
+            <tr><td colspan="3" style="text-align:center;">Cargando...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- MODAL SELECTOR DE USUARIOS -->
+<div class="modal" id="modalUsuarios">
+    <div class="modal-content" style="text-align: center;">
+        <button class="close-modal" onclick="cerrarModalUsuarios(); hablar('Cerrada');">Cerrar ❌</button>
+        <h2 onclick="hablar('¿De quién es el movimiento? Toca un nombre de la lista, o escribe uno nuevo.')">👤 Elegir Nombre 🗣️</h2>
+        
+        <div id="lista-usuarios" style="display: grid; gap: 1rem; margin-top: 1.5rem; max-height: 40vh; overflow-y: auto;">
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px dashed var(--border);">
+            <label style="font-size: 1.5rem; font-weight: bold; color: var(--primary);" onclick="hablar('O escribe un nombre nuevo abajo')">✏️ Escribir Nombre Nuevo</label>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <input type="text" id="nuevo-usuario" class="calc-input" placeholder="Ej. Doña María" style="font-size: 1.8rem;">
+                <button class="btn-clear" style="font-size: 1.5rem; background: var(--success);" onclick="seleccionarNuevoUsuario()">Usar ✔️</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000/api';
+    let tipoSeleccionado = '';
+    let montoActual = 0;
+    const sintesis = window.speechSynthesis;
+
+    function hablar(texto) {
+        if (sintesis.speaking) sintesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1;
+        sintesis.speak(utterance);
+    }
+
+    function seleccionar(btn, nombreHablado) {
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        tipoSeleccionado = btn.getAttribute('data-val');
+        hablar('Seleccionaste ' + nombreHablado);
+    }
+
+    function agregarMonto(valor) {
+        montoActual += valor;
+        actualizarDisplayMonto();
+        const textoMoneda = valor >= 1 ? `${valor} dólares` : `${valor * 100} centavos`;
+        hablar(`Más ${textoMoneda}. Total: ${montoActual.toFixed(2)} dólares`);
+    }
+
+    function limpiarMonto() {
+        montoActual = 0;
+        actualizarDisplayMonto();
+        hablar('Monto guardado correctamente.');
+    }
+
+    function actualizarDisplayMonto() {
+        document.getElementById('display-monto').innerText = '$' + montoActual.toFixed(2);
+    }
+
+    const rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (rec) {
+        const reconocimiento = new rec();
+        reconocimiento.lang = 'es-ES';
+        reconocimiento.continuous = false;
+
+        reconocimiento.onstart = function() {
+            mostrarEstado('🎤', 'Escuchando...', false);
+        };
+
+        reconocimiento.onresult = function(event) {
+            const texto = event.results[0][0].transcript.toLowerCase();
+            document.getElementById('status-msg').style.display = 'none';
+            procesarComandoVoz(texto);
+        };
+
+        reconocimiento.onerror = function() {
+            document.getElementById('status-msg').style.display = 'none';
+        }
+
+        window.escuchar = function() {
+            hablar("Dime el tipo de movimiento, monto y usuario.");
+            setTimeout(() => { reconocimiento.start(); }, 2500);
+        }
+    } else {
+        window.escuchar = function() { alert("Tu navegador no soporta reconocimiento de voz."); }
+    }
+
+    function procesarComandoVoz(texto) {
+        let tipoCalculado = '';
+        let btnClick = null;
+
+        if (texto.includes('préstamo') || texto.includes('prestar')) {
+            tipoCalculado = 'Préstamo'; btnClick = document.querySelector('[data-val="Préstamo"]');
+        } else if (texto.includes('pago') || texto.includes('abono') || texto.includes('capital')) {
+            tipoCalculado = 'Pago_Capital'; btnClick = document.querySelector('[data-val="Pago_Capital"]');
+        } else if (texto.includes('multa') || texto.includes('infracción')) {
+            tipoCalculado = 'Multa'; btnClick = document.querySelector('[data-val="Multa"]');
+        }
+
+        if (tipoCalculado && btnClick) {
+            seleccionar(btnClick, tipoCalculado);
+        }
+
+        const matches = texto.match(/\d+(\.\d+)?/g);
+        if (matches && matches.length > 0) {
+            montoActual = parseFloat(matches[0]);
+            actualizarDisplayMonto();
+            hablar(`Monto detectado: ${montoActual.toFixed(2)} dólares`);
+        }
+    }
+
+    function mostrarEstado(emoji, texto, esError = false) {
+        const st = document.getElementById('status-msg');
+        st.innerHTML = `${emoji} ${texto}`;
+        st.style.display = 'block';
+        st.style.backgroundColor = esError ? '#fee2e2' : '#dcfce7';
+        st.style.color = esError ? '#dc2626' : '#16a34a';
+        hablar(texto);
+        if(!esError) setTimeout(() => { st.style.display = 'none'; }, 5000);
+    }
+
+    // ======= MODAL USUARIOS =======
+    async function abrirModalUsuarios() {
+        document.getElementById('modalUsuarios').style.display = 'flex';
+        try {
+            const res = await fetch(`${API_URL}/usuarios`);
+            const usuarios = await res.json();
+            const lista = document.getElementById('lista-usuarios');
+            lista.innerHTML = '';
+            
+            usuarios.forEach(user => {
+                lista.innerHTML += `
+                    <button class="option-btn" style="padding: 1rem; border-color: var(--primary);" 
+                            onclick="seleccionarUsuarioDeLista('${user}')">
+                        <span style="font-size: 2rem;">👤 ${user}</span>
+                    </button>
+                `;
+            });
+            if(usuarios.length === 0) lista.innerHTML = '<p>No hay nombres todavía.</p>';
+        } catch(e) { console.error(e); }
+    }
+
+    function cerrarModalUsuarios() {
+        document.getElementById('modalUsuarios').style.display = 'none';
+    }
+
+    function seleccionarUsuarioDeLista(nombre) {
+        document.getElementById('usuario').value = nombre;
+        document.getElementById('usuario-display').innerText = nombre;
+        cerrarModalUsuarios();
+        hablar(`Seleccionaste a ${nombre}`);
+    }
+
+    function seleccionarNuevoUsuario() {
+        const nombreVal = document.getElementById('nuevo-usuario').value.trim();
+        if(nombreVal) {
+            seleccionarUsuarioDeLista(nombreVal);
+            document.getElementById('nuevo-usuario').value = '';
+        } else {
+            hablar("Escribe un nombre primero");
+        }
+    }
+
+    async function guardar() {
+        const usuario = document.getElementById('usuario').value;
+
+        if (!tipoSeleccionado) {
+            mostrarEstado('⚠️', 'Falta seleccionar el movimiento', true);
+            return;
+        }
+        if (montoActual <= 0) {
+            mostrarEstado('⚠️', 'El monto debe ser mayor a 0', true);
+            return;
+        }
+
+        const payload = { tipo_movimiento: tipoSeleccionado, monto: montoActual, usuario_id: usuario };
+
+        try {
+            const res = await fetch(`${API_URL}/transacciones`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                mostrarEstado('❌', data.error, true);
+            } else {
+                mostrarEstado('🎉', '¡Guardado correctamente!');
+                montoActual = 0; 
+                actualizarDisplayMonto();
+                document.getElementById('usuario').value = '';
+                document.getElementById('usuario-display').innerText = '--- (Tocar para elegir)';
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                tipoSeleccionado = '';
+                cargarPrestamos(); // Refrescar tabla
+            }
+        } catch (error) {
+            mostrarEstado('❌', 'Error al conectar con el servidor', true);
+        }
+    }
+
+    // ======= TABLA PRESTAMOS =======
+    let prestamosData = [];
+    async function cargarPrestamos() {
+        try {
+            const res = await fetch(`${API_URL}/prestamos`);
+            prestamosData = await res.json();
+            calcularTabla();
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('tabla-body').innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Error de conexión.</td></tr>';
+        }
+    }
+
+    function calcularTabla() {
+        const tasaStr = document.getElementById('tasa-global').value;
+        const tasa = parseFloat(tasaStr) || 0;
+        const tbody = document.getElementById('tabla-body');
+        
+        if (prestamosData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay préstamos activos.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        prestamosData.forEach(p => {
+            const aumentoInteres = p.deuda_base * (tasa / 100);
+            const deudaTotal = p.deuda_base + aumentoInteres;
+
+            tbody.innerHTML += `
+                <tr onclick="hablar('${p.usuario} debe ${deudaTotal.toFixed(2)} dólares')">
+                    <td>👤 ${p.usuario}</td>
+                    <td class="amount">$${p.deuda_base.toFixed(2)}</td>
+                    <td class="debt" style="cursor: pointer;">$${deudaTotal.toFixed(2)} 🗣️</td>
+                </tr>
+            `;
+        });
+    }
+
+    cargarPrestamos();
+</script>
+
+</body>
+</html>

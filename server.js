@@ -40,7 +40,7 @@ async function Calcular_Saldos() {
     for (const row of fondoRows) {
         if (row.tipo_movimiento === 'Depósito' || row.tipo_movimiento === 'Pago_Capital') {
             total_fondo_comunal += row.monto;
-        } else if (row.tipo_movimiento === 'Préstamo') {
+        } else if (row.tipo_movimiento === 'Préstamo' || row.tipo_movimiento === 'Retiro') {
             total_fondo_comunal -= row.monto;
         }
     }
@@ -91,7 +91,7 @@ app.post('/api/transacciones', async (req, res) => {
         }
 
         // Lógica de Clasificación
-        const tiposFondo = ["Depósito", "Préstamo", "Pago_Capital"];
+        const tiposFondo = ["Depósito", "Préstamo", "Retiro", "Pago_Capital"];
         const tiposRendimiento = ["Interés", "Multa"];
         let cuenta_destino = "";
 
@@ -100,14 +100,14 @@ app.post('/api/transacciones', async (req, res) => {
         } else if (tiposRendimiento.includes(tipo_movimiento)) {
             cuenta_destino = "Rendimiento";
         } else {
-            return res.status(400).json({ error: "Tipo de movimiento no válido. Valores aceptados: Depósito, Préstamo, Pago_Capital, Interés, Multa." });
+            return res.status(400).json({ error: "Tipo de movimiento no válido. Valores aceptados: Depósito, Préstamo, Retiro, Pago_Capital, Interés, Multa." });
         }
 
-        // Regla B: Validar Préstamo vs Total_Fondo_Comunal
-        if (tipo_movimiento === 'Préstamo') {
+        // Regla B: Validar Préstamo o Retiro vs Total_Fondo_Comunal
+        if (tipo_movimiento === 'Préstamo' || tipo_movimiento === 'Retiro') {
             const saldosActuales = await Calcular_Saldos();
             if (monto > saldosActuales.total_fondo_comunal) {
-                return res.status(400).json({ error: "Fondos insuficientes para este préstamo" });
+                return res.status(400).json({ error: "Fondos insuficientes en el Fondo Comunal" });
             }
         }
 
@@ -131,6 +131,62 @@ app.post('/api/transacciones', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// GET /api/prestamos -> Lista de usuarios con sus deudas (Préstamos - Pago_Capital)
+app.get('/api/prestamos', async (req, res) => {
+    try {
+        const rows = await db.all(`
+            SELECT usuario_id,
+                   SUM(CASE WHEN tipo_movimiento = 'Préstamo' THEN monto ELSE 0 END) as total_prestado,
+                   SUM(CASE WHEN tipo_movimiento = 'Pago_Capital' THEN monto ELSE 0 END) as total_pagado
+            FROM Transacciones
+            WHERE usuario_id IS NOT NULL AND usuario_id != ''
+            GROUP BY usuario_id
+        `);
+        
+        const prestamos = rows.map(r => ({
+            usuario: r.usuario_id,
+            deuda_base: r.total_prestado - r.total_pagado
+        })).filter(r => r.deuda_base > 0);
+
+        res.json(prestamos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/inversiones -> Lista de usuarios con sus depósitos (Depósito - Retiro)
+app.get('/api/inversiones', async (req, res) => {
+    try {
+        const rows = await db.all(`
+            SELECT usuario_id,
+                   SUM(CASE WHEN tipo_movimiento = 'Depósito' THEN monto ELSE 0 END) as total_depositado,
+                   SUM(CASE WHEN tipo_movimiento = 'Retiro' THEN monto ELSE 0 END) as total_retirado
+            FROM Transacciones
+            WHERE usuario_id IS NOT NULL AND usuario_id != ''
+            GROUP BY usuario_id
+        `);
+        
+        const inversiones = rows.map(r => ({
+            usuario: r.usuario_id,
+            capital: r.total_depositado - r.total_retirado
+        })).filter(r => r.capital > 0);
+
+        res.json(inversiones);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/usuarios -> Lista de todos los usuarios registrados
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const rows = await db.all(`SELECT DISTINCT usuario_id FROM Transacciones WHERE usuario_id IS NOT NULL AND usuario_id != ''`);
+        res.json(rows.map(r => r.usuario_id));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
