@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏦</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .cards {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: 120px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: scale(1.05); }
+
+        .card.total {
+            border: 3px solid var(--success);
+            width: 100%;
+        }
+
+        .emoji-title {
+            font-size: 3rem;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0 0 0;
+        }
+
+        .card.total .amount { color: var(--success); }
+
+        .form-section {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-btn {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 1rem;
+            font-size: 2.5rem;
+            padding: 1rem 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: scale(1.05);
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg);
+            border-radius: 1rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--border);
+        }
+
+        .input-emoji { font-size: 2rem; margin-right: 1rem; cursor: pointer; }
+
+        input {
+            border: none;
+            background: transparent;
+            font-size: 2rem;
+            width: 100%;
+            outline: none;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .action-btn {
+            font-size: 3rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.1); }
+        .action-btn:active { transform: scale(0.9); }
+
+        .mic-btn {
+            font-size: 4rem;
+            background: var(--primary);
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); background: var(--danger); }
+            70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); background: var(--danger); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); background: var(--danger); }
+        }
+
+        .listening { animation: pulse 1.5s infinite; }
+
+        .status-emoji {
+            font-size: 4rem;
+            display: none;
+            margin-top: 1rem;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Lector de Pantalla Global / Micrófono de Instrucciones -->
+    <button class="mic-btn" id="btn-hablar" onclick="hablar('¡Hola! Toca las figuras para escuchar qué son, o presiona este micrófono un segundo para dictarme un movimiento.'); toggleMic();">
+        🎤
+    </button>
+    <div id="status" class="status-emoji" onclick="hablarRespuesta()">✅</div>
+
+    <!-- SALDOS -->
+    <div class="cards">
+        <div class="card" onclick="hablar('Fondo Comunitario. ' + document.getElementById('val-fondo').innerText)">
+            <p class="emoji-title">🏦</p>
+            <p class="amount" id="val-fondo">0</p>
+        </div>
+        <div class="card" onclick="hablar('Rendimientos o ganancias. ' + document.getElementById('val-rendimiento').innerText)">
+            <p class="emoji-title">📈</p>
+            <p class="amount" id="val-rendimiento">0</p>
+        </div>
+        <div class="card total" onclick="hablar('Gran Total en la caja. ' + document.getElementById('val-total').innerText)">
+            <p class="emoji-title">💎</p>
+            <p class="amount" id="val-total">0</p>
+        </div>
+    </div>
+
+    <!-- REGISTRO SIN TEXTO -->
+    <div class="form-section">
+        <div class="grid-options" id="tipo-options">
+            <button class="option-btn" data-val="Depósito" onclick="seleccionar(this, 'Depósito')">📥</button>
+            <button class="option-btn" data-val="Préstamo" onclick="seleccionar(this, 'Préstamo')">📤</button>
+            <button class="option-btn" data-val="Pago_Capital" onclick="seleccionar(this, 'Devolución de dinero')">↩️</button>
+            <button class="option-btn" data-val="Interés" onclick="seleccionar(this, 'Intereses')">⏱️</button>
+            <button class="option-btn" data-val="Multa" onclick="seleccionar(this, 'Multa')">⚠️</button>
+        </div>
+
+        <div class="input-group">
+            <div class="input-emoji" onclick="hablar('Cantidad de dinero')">💵</div>
+            <input type="number" id="monto" step="0.01" min="0.01" placeholder="0.00">
+        </div>
+
+        <div class="input-group">
+            <div class="input-emoji" onclick="hablar('Identificación o nombre de la persona')">👤</div>
+            <input type="text" id="usuario" placeholder="---">
+        </div>
+
+        <button class="action-btn" onclick="guardar()">💾</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000/api';
+    let tipoSeleccionado = '';
+    let lastMsg = '';
+
+    // ======= VOZ (Text to Speech) =======
+    const synth = window.speechSynthesis;
+    function hablar(texto) {
+        synth.cancel(); // Detener anterior
+        const utterThis = new SpeechSynthesisUtterance(texto);
+        utterThis.lang = 'es-MX';
+        utterThis.rate = 1.0;
+        synth.speak(utterThis);
+        lastMsg = texto;
+    }
+
+    function hablarRespuesta() {
+        if(lastMsg) hablar(lastMsg);
+    }
+
+    // ======= RECONOCIMIENTO DE VOZ =======
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'es-MX';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isListening = true;
+            document.getElementById('btn-hablar').classList.add('listening');
+            hablar("Te escucho...");
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            procesarVoz(transcript);
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            document.getElementById('btn-hablar').classList.remove('listening');
+        };
+    }
+
+    function toggleMic() {
+        if (!recognition) {
+            hablar("Tu navegador no soporta escuchar voz.");
+            return;
+        }
+        if (isListening) {
+            recognition.stop();
+        } else {
+            setTimeout(() => recognition.start(), 1500); // Esperar a que acabe de hablar el saludo
+        }
+    }
+
+    // Procesar la orden de voz
+    function procesarVoz(texto) {
+        console.log("Escuchado:", texto);
+        let montoEncontrado = texto.match(/\d+(\.\d+)?/); 
+        let monto = montoEncontrado ? parseFloat(montoEncontrado[0]) : 0;
+        
+        let tipoCalculado = '';
+        let btnClick = null;
+
+        if (texto.includes('depósito') || texto.includes('depositar') || texto.includes('guardar')) {
+            tipoCalculado = 'Depósito';
+            btnClick = document.querySelector('[data-val="Depósito"]');
+        } else if (texto.includes('préstamo') || texto.includes('prestar') || texto.includes('sacar')) {
+            tipoCalculado = 'Préstamo';
+            btnClick = document.querySelector('[data-val="Préstamo"]');
+        } else if (texto.includes('pago') || texto.includes('devolución') || texto.includes('capital')) {
+            tipoCalculado = 'Pago_Capital';
+            btnClick = document.querySelector('[data-val="Pago_Capital"]');
+        } else if (texto.includes('interés') || texto.includes('comisión')) {
+            tipoCalculado = 'Interés';
+            btnClick = document.querySelector('[data-val="Interés"]');
+        } else if (texto.includes('multa') || texto.includes('infracción')) {
+            tipoCalculado = 'Multa';
+            btnClick = document.querySelector('[data-val="Multa"]');
+        }
+
+        if (tipoCalculado && btnClick) {
+            seleccionar(btnClick, tipoCalculado);
+            if (monto > 0) {
+                document.getElementById('monto').value = monto;
+                hablar(`Entendido. ${tipoCalculado} por ${monto} pesos. Presiona el disquete para guardar.`);
+            } else {
+                hablar(`Entendido. Seleccionado ${tipoCalculado}. ¿Cuánto es el monto?`);
+            }
+        } else {
+            hablar("No entendí bien qué movimiento es. Intenta decir: Depósito de cien pesos.");
+        }
+    }
+
+    // ======= INTERFAZ =======
+    function seleccionar(btn, nombreHablado) {
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        tipoSeleccionado = btn.getAttribute('data-val');
+        
+        // Si no fue accionado por voz, lo hablamos
+        if(!isListening) {
+            hablar(nombreHablado);
+        }
+    }
+
+    function mostrarEstado(emoji, mensaje) {
+        const div = document.getElementById('status');
+        div.innerText = emoji;
+        div.style.display = 'block';
+        hablar(mensaje);
+        setTimeout(() => div.style.display = 'none', 6000);
+    }
+
+    // ======= LÓGICA BACKEND =======
+    async function actualizarSaldos() {
+        try {
+            const res = await fetch(`${API_URL}/saldos`);
+            const data = await res.json();
+            
+            document.getElementById('val-fondo').innerText = data.total_fondo_comunal.toFixed(2);
+            document.getElementById('val-rendimiento').innerText = data.total_rendimiento.toFixed(2);
+            document.getElementById('val-total').innerText = data.gran_total_caja.toFixed(2);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function guardar() {
+        const monto = parseFloat(document.getElementById('monto').value);
+        const usuario = document.getElementById('usuario').value;
+
+        if (!tipoSeleccionado) {
+            mostrarEstado('❓', 'Falta seleccionar la figura de arriba.');
+            return;
+        }
+
+        if (isNaN(monto) || monto <= 0) {
+            mostrarEstado('🚫', 'El dinero debe ser mayor a cero.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/transacciones`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipo_movimiento: tipoSeleccionado, monto: monto, usuario_id: usuario || null })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                mostrarEstado('❌', data.error);
+            } else {
+                mostrarEstado('🎉', '¡Guardado correctamente!');
+                document.getElementById('monto').value = '';
+                document.getElementById('usuario').value = '';
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                tipoSeleccionado = '';
+                actualizarSaldos();
+            }
+        } catch (error) {
+            mostrarEstado('🔌', 'Error de conexión.');
+        }
+    }
+
+    // Iniciar
+    actualizarSaldos();
+</script>
+
+</body>
+</html>
